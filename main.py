@@ -93,14 +93,24 @@ async def upload_video(video: UploadFile = File(...)):
 
         transcript = transcription.text
 
-        segments = [
-            {
-                "start": float(s.start),
-                "end": float(s.end),
-                "text": s.text
-            }
-            for s in (transcription.segments or [])
-        ]
+        segments = []
+
+for s in (transcription.segments or []):
+    if isinstance(s, dict):
+        start = s.get("start")
+        end = s.get("end")
+        text = s.get("text", "")
+    else:
+        start = getattr(s, "start", None)
+        end = getattr(s, "end", None)
+        text = getattr(s, "text", "")
+
+    if start is not None and end is not None:
+        segments.append({
+            "start": float(start),
+            "end": float(end),
+            "text": str(text)
+        })
 
         if not segments:
             return {
